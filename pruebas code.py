@@ -128,11 +128,12 @@ class OrdenModificacion:
             print(f"No se puede agregar {componente_objeto.nombre_pieza}. ¡No hay stock!")
             return
 
-        # 2. Calcular cuánto costaría sumando esta pieza
-        costo_temporal = self.costo_mano_obra + componente_objeto.precio
+        # 2. Calcular el costo total de la orden si agregamos esta pieza
+        costo_actual_piezas = sum(pieza.precio for pieza in self.lista_componentes)
+        costo_temporal = self.costo_mano_obra + costo_actual_piezas + componente_objeto.precio
         
         # 3. Validar si al piloto le alcanza el dinero
-        if self.piloto.verificar_presupuesto(costo_temporal) == True:
+        if self.piloto.verificar_presupuesto(costo_temporal):
             # Si pasa las pruebas, agregamos la pieza a la lista y bajamos el stock
             self.lista_componentes.append(componente_objeto)
             componente_objeto.reducir_stock(1)
@@ -141,33 +142,30 @@ class OrdenModificacion:
             print(f"{self.piloto.nombre} no tiene presupuesto suficiente para esta pieza.")
 
     def finalizar_trabajo(self):
+        if self.estado_orden == "Entregado":
+            print("La orden ya fue finalizada.")
+            return
 
-    if self.estado_orden == "Entregado":
-        print("La orden ya fue finalizada.")
-        return
+        print(f"\n--- FINALIZANDO ORDEN N° {self.id_orden} ---")
 
-    print(f"\n--- FINALIZANDO ORDEN N° {self.id_orden} ---")
+        total_piezas = 0
 
-    total_piezas = 0
+        for pieza in self.lista_componentes:
+            self.vehiculo.incrementar_rendimiento(
+                pieza.aporte_hp,
+                pieza.aporte_angulo
+            )
+            total_piezas = total_piezas + pieza.precio
 
-    for pieza in self.lista_componentes:
+        costo_total_final = total_piezas + self.costo_mano_obra
 
-        self.vehiculo.incrementar_rendimiento(
-            pieza.aporte_hp,
-            pieza.aporte_angulo
-        )
+        self.piloto.actualizar_inversion(costo_total_final)
+        self.vehiculo.actualizar_estado("Listo para Pista")
+        self.mecanico.liberar_mecanico()
 
-        total_piezas = total_piezas + pieza.precio
+        self.estado_orden = "Entregado"
 
-    costo_total_final = total_piezas + self.costo_mano_obra
-
-    self.piloto.actualizar_inversion(costo_total_final)
-    self.vehiculo.actualizar_estado("Listo para Pista")
-    self.mecanico.liberar_mecanico()
-
-    self.estado_orden = "Entregado"
-
-    print("-----------------------------------------\n")
+        print("-----------------------------------------\n")
 
 
 # SIMULACIÓN / PRUEBA DE FUNCIONAMIENTO (Para ver cómo interactúan)
@@ -195,6 +193,9 @@ orden1.finalizar_trabajo()
 
 # Ver cómo quedó el auto después del taller
 auto1.generar_ficha_tecnica()
+
+lista_autos = []
+
 while True:
 
     print("\nTaller de Tuning y Performance - Menú Principal")
