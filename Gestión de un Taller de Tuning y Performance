@@ -1,0 +1,102 @@
+Sistema de Gestión de un Taller de Tuning y Performance
+Aquí se meten de lleno en la preparación de los autos para que puedan derrapar:
+ modificación de motores, suspensión, y ensanche de carrocerías.
+Entidades principales: 
+Autos del Proyecto (Proyecto Drift), Clientes/Pilotos, Mecánicos/Tuners, Modificaciones 
+(Categorías: Motor, Suspensión, Ángulo de Giro, Electrónica),
+ Repuestos de Performance (Turbos, Coilovers, Neumáticos de compuesto blando).
+------------------------------------------------------------------------------------------------------
+# Sistema de Gestión de un Taller de Tuning y Performance 🏎️💨
+
+Este sistema está diseñado para administrar un taller especializado en la modificación, preparación y potenciación de vehículos de alta competencia, con un enfoque principal en la disciplina del **Drift y Track Days**. 
+
+El software permite gestionar el inventario de piezas de alto rendimiento, controlar los proyectos de modificación de los pilotos, asignar mecánicos especialistas y procesar las órdenes de trabajo controlando los presupuestos de forma automatizada.
+
+---
+
+## 🛠️ Arquitectura y Modelo de Clases (.py)
+
+A continuación se detallan las 5 clases principales que estructuran la lógica de negocio del sistema, adaptadas para su implementación en Python:
+
+### 1. Clase `VehiculoProyecto`
+Representa el automóvil que ingresa al taller para ser modificado. A diferencia de un sistema vehicular común, este realiza un seguimiento estricto del rendimiento en pista y especificaciones de carrera.
+
+* **Atributos:**
+    * `id_vehiculo` *(int / str)*: Identificador único del vehículo.
+    * `marca_modelo` *(str)*: Ejemplo: "Nissan Silvia S15", "Toyota GT86".
+    * `anio` *(int)*: Año de fabricación.
+    * `hp_stock` *(int)*: Caballos de fuerza originales con los que ingresó al taller.
+    * `hp_actuales` *(int)*: Caballos de fuerza actuales del auto tras recibir modificaciones.
+    * `angulo_giro` *(int)*: Modificación clave para el drift medida en grados (ej: 65°).
+    * `estado_proyecto` *(str)*: Estado actual en el taller (`"Stock"`, `"En Desmantelamiento"`, `"Forjando Motor"`, `"Seteo de Suspensión"`, `"Listo para Pista"`).
+* **Métodos:**
+    * `actualizar_estado(nuevo_estado)`: Modifica la fase actual del proyecto.
+    * `incrementar_rendimiento(hp_ganados, extra_angulo)`: Aumenta dinámicamente los caballos de fuerza y el ángulo de giro tras instalar componentes.
+    * `generar_ficha_tecnica()`: Retorna un string formateado con las especificaciones técnicas completas y actuales del auto.
+
+### 2. Clase `PilotoCliente`
+Representa al dueño del vehículo, quien usualmente es un piloto (amateur o profesional) que compite en campeonatos o asiste a eventos de velocidad.
+
+* **Atributos:**
+    * `id_cliente` *(str)*: RUT, DNI o identificador único del cliente.
+    * `nombre` *(str)*: Nombre completo del piloto.
+    * `telefono` *(str)*: Teléfono de contacto.
+    * `presupuesto_maximo` *(float)*: Límite de dinero que el cliente puede o está dispuesto a gastar.
+    * `dinero_invertido` *(float)*: Total acumulado de lo que el cliente ha gastado en el taller.
+    * `tipo_licencia` *(str)*: Categoría del piloto (`"Amateur"`, `"Pro-Am"`, `"Pro Drift"`).
+* **Métodos:**
+    * `verificar_presupuesto(monto_a_evaluar)`: Valida mediante un booleano si el cliente cuenta con fondos suficientes antes de autorizar una nueva modificación.
+    * `actualizar_inversion(monto)`: Suma de forma acumulativa los costos de operaciones aprobadas al total invertido.
+
+### 3. Clase `ComponentePerformance`
+Representa los repuestos y piezas de alta gama que se encuentran en el inventario del taller listos para ser instalados. Cada pieza altera directamente el comportamiento del vehículo.
+
+* **Atributos:**
+    * `id_componente` *(str)*: Código único del repuesto (SKU).
+    * `nombre_pieza` *(str)*: Ejemplo: "Turbo Garrett G30", "Kit de Ángulo Wisefab".
+    * `categoria` *(str)*: Área de modificación (`"Motor"`, `"Suspensión"`, `"Transmisión"`, `"Electrónica"`).
+    * `precio` *(float)*: Costo comercial de la pieza.
+    * `aporte_hp` *(int)*: Caballos de fuerza que añade al motor (en caso de ser categoría Motor).
+    * `aporte_angulo` *(int)*: Grados de giro extra que añade a la dirección (en caso de ser categoría Suspensión).
+    * `stock_disponible` *(int)*: Unidades disponibles en el inventario.
+* **Métodos:**
+    * `reducir_stock(cantidad)`: Descuenta unidades del inventario central cuando se asignan a un vehículo.
+    * `es_apto_para_drift()`: Retorna un booleano verificando si la pieza cumple con las regulaciones de alta competencia.
+
+### 4. Clase `OrdenModificacion`
+Es la clase central (entidad intermedia) que gestiona la lógica operativa del taller. Conecta de forma directa al cliente, su vehículo, el mecánico a cargo y el listado de componentes instalados.
+
+* **Atributos:**
+    * `id_orden` *(int)*: Número correlativo de la orden de trabajo.
+    * `vehiculo` *(VehiculoProyecto)*: Instancia del auto que se va a modificar.
+    * `piloto` *(PilotoCliente)*: Instancia del dueño del vehículo.
+    * `lista_componentes` *(list)*: Arreglo/Lista que almacena objetos de tipo `ComponentePerformance`.
+    * `costo_mano_obra` *(float)*: Tarifa fija por los servicios de instalación, balanceo y seteo en el taller.
+    * `fecha_ingreso` *(date)*: Fecha de registro de la orden.
+* **Métodos:**
+    * `agregar_componente(componente)`: Agrega una pieza al proyecto, validando previamente que exista `stock_disponible` y que el piloto no exceda su `presupuesto_maximo`.
+    * `calcular_costo_total()`: Calcula el valor total de la orden sumando los precios de todos los componentes agregados más la mano de obra.
+    * `finalizar_trabajo()`: Aplica de forma definitiva los incrementos de rendimiento al `VehiculoProyecto`, actualiza el dinero invertido del `PilotoCliente` y declara la orden como finalizada.
+
+### 5. Clase `TunerMecanico`
+Representa al personal técnico altamente calificado que trabaja en el taller, encargados de la instalación física y de la calibración electrónica (Chiptuning).
+
+* **Atributos:**
+    * `id_mecanico` *(int)*: Identificador interno del trabajador.
+    * `nombre` *(str)*: Nombre del mecánico especialista.
+    * `especialidad` *(str)*: Área técnica de dominio (`"Motores JDM"`, `"Suspensión y Alineación"`, `"Programación de ECUs"`).
+    * `disponibilidad` *(bool)*: Estado de disponibilidad para recibir nuevos vehículos.
+    * `proyectos_asignados` *(int)*: Contador de vehículos bajo su responsabilidad en tiempo real.
+* **Métodos:**
+    * `asignar_proyecto()`: Incrementa la carga laboral y actualiza la disponibilidad si llega al límite técnico del mecánico.
+    * `liberar_mecanico()`: Reduce los proyectos activos a su cargo al finalizar y despachar una orden de modificación.
+
+---
+
+## 📈 Lógica de Relación e Interacción
+
+El flujo de información y dependencias entre los objetos sigue las siguientes reglas del negocio:
+
+1.  **Relación Cliente-Vehículo (1 a Muchos):** Un `PilotoCliente` puede poseer uno o varios objetos `VehiculoProyecto` registrados en el taller, pero cada vehículo pertenece exclusivamente a un piloto.
+2.  **La Orden de Trabajo como Eje Central:** Una `OrdenModificacion` requiere obligatoriamente interactuar con un `PilotoCliente`, un `VehiculoProyecto` y ser asignada a un `TunerMecanico` responsable.
+3.  **Composición de Componentes:** La `OrdenModificacion` contiene una lista dinámica (`lista_componentes`) de objetos `ComponentePerformance`. Las mutaciones de rendimiento del auto ocurren únicamente cuando los componentes se procesan de forma exitosa dentro de esta orden.
