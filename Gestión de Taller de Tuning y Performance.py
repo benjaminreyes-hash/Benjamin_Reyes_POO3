@@ -1,5 +1,5 @@
 class VehiculoProyecto:
-    # 1. EL CONSTRUCTOR: Aquí se crean los atributos cuando nace el objeto
+    # 1 EL CONSTRUCTOR: Aquí se crean los atributos cuando nace el objeto
     def __init__(self, marca_modelo, año, hp_stock, angulo_giro):
         self.marca_modelo = marca_modelo
         self.año = año
@@ -26,3 +26,12 @@ class VehiculoProyecto:
                 f"Potencia: {self.hp_actuales} HP (Stock: {self.hp_stock} HP)\n"
                 f"Ángulo de Giro: {self.angulo_giro}°\n"
                 f"----------------------------------------")
+
+class PilotoCliente:
+    def __init__(self,id_cliente, nombre, telefono, presupuesto_maximo, dinero_invertido, tipo_licencia):
+        self.id_cliente = id_cliente
+        self.nombre = nombre
+        self.telefono = telefono
+        self.presupuesto_maximo = presupuesto_maximo
+        self.dinero_invertido = dinero_invertido
+        self.tipo_licencia = tipo_licencia
