@@ -1,11 +1,11 @@
 # CLASE 1: El auto que se va a modificar
 class VehiculoProyecto:
-    def __init__(self, id_vehiculo, marca_modelo, anio, hp_stock, angulo_giro):
+    def __init__(self, id_vehiculo, marca_modelo, año, hp_stock, angulo_giro):
         self.id_vehiculo = id_vehiculo
         self.marca_modelo = marca_modelo
-        self.anio = anio
+        self.año = año
         self.hp_stock = hp_stock
-        self.hp_actuales = hp_stock  # Al principio llega con los mismos HP de fábrica
+        self.__hp_actuales = hp_stock  # Al principio llega con los mismos HP de fábrica
         self.angulo_giro = angulo_giro
         self.estado_proyecto = "Stock"  # Estado inicial por defecto
 
@@ -16,37 +16,57 @@ class VehiculoProyecto:
 
     def incrementar_rendimiento(self, hp_ganados, extra_angulo):
         # Suma los nuevos HP y ángulo a los que ya tenía el auto
-        self.hp_actuales = self.hp_actuales + hp_ganados
+        self.__hp_actuales = self.__hp_actuales + hp_ganados
         self.angulo_giro = self.angulo_giro + extra_angulo
-        print(f" ¡Auto Potenciado! Ahora tiene {self.hp_actuales} HP y {self.angulo_giro}° de giro.")
+        print(f" ¡Auto Potenciado! Ahora tiene {self.__hp_actuales} HP y {self.angulo_giro}° de giro.")
 
     def generar_ficha_tecnica(self):
         # Muestra un resumen simple del auto en la pantalla
         print(f"--- FICHA DE {self.marca_modelo} ---")
         print(f"Estado: {self.estado_proyecto}")
-        print(f"HP Actuales: {self.hp_actuales} (Llegó con: {self.hp_stock})")
+        print(f"HP Actuales: {self.__hp_actuales} (Llegó con: {self.hp_stock})")
         print(f"Ángulo de Giro: {self.angulo_giro}°")
         print("---------------------------------")
 
-# CLASE 2: El dueño del auto (Piloto)
-class PilotoCliente:
-    def __init__(self, id_cliente, nombre, presupuesto_maximo):
-        self.id_cliente = id_cliente
+    def obtener_hp(self):
+        return self.__hp_actuales
+
+from abc import ABC, abstractmethod
+
+# Clase abstracta
+class Persona(ABC):
+
+    def __init__(self, nombre):
         self.nombre = nombre
+
+    @abstractmethod
+    def mostrar_tipo(self):
+        pass
+
+# CLASE 2: El dueño del auto (Piloto)
+class PilotoCliente(Persona):
+
+    def __init__(self, id_cliente, nombre, presupuesto_maximo):
+        super().__init__(nombre)
+
+        self.id_cliente = id_cliente
         self.presupuesto_maximo = presupuesto_maximo
-        self.dinero_invertido = 0.0  # Al principio no ha gastado nada
+        self.dinero_invertido = 0.0
+
+    def mostrar_tipo(self):
+        print("Soy un cliente")
 
     def verificar_presupuesto(self, monto_a_gastar):
-        # Revisa si lo que va a gastar supera su presupuesto máximo
+
         if monto_a_gastar <= self.presupuesto_maximo:
-            return True  # Sí le alcanza
+            return True
         else:
-            return False # No le alcanza
+            return False
 
     def actualizar_inversion(self, monto):
-        # Suma el gasto al total de dinero invertido
+
         self.dinero_invertido = self.dinero_invertido + monto
-        print(f" {self.nombre} ha gastado un total de: ${self.dinero_invertido}")
+        print(f"{self.nombre} ha gastado un total de: ${self.dinero_invertido}")
 
 
 # CLASE 3: Las piezas tuning (Componentes)
@@ -65,22 +85,27 @@ class ComponentePerformance:
         print(f" Quedan {self.stock_disponible} unidades de {self.nombre_pieza} en stock.")
 
 # CLASE 4: El mecánico del taller
-class TunerMecanico:
+class TunerMecanico(Persona):
+
     def __init__(self, id_mecanico, nombre, especialidad):
+        super().__init__(nombre)
+
         self.id_mecanico = id_mecanico
-        self.nombre = nombre
         self.especialidad = especialidad
-        self.proyectos_asignados = 0  # Empieza sin autos a cargo
+        self.proyectos_asignados = 0
+
+    def mostrar_tipo(self):
+        print("Soy un mecanico")
 
     def asignar_proyecto(self):
-        # Le suma 1 auto a su carga de trabajo
+
         self.proyectos_asignados = self.proyectos_asignados + 1
-        print(f" Mecánico {self.nombre} tomó un nuevo trabajo. Total a cargo: {self.proyectos_asignados}")
+        print(f"Mecánico {self.nombre} tomó un nuevo trabajo. Total a cargo: {self.proyectos_asignados}")
 
     def liberar_mecanico(self):
-        # Le resta 1 auto cuando termina el trabajo
+
         self.proyectos_asignados = self.proyectos_asignados - 1
-        print(f" Mecánico {self.nombre} terminó un trabajo. Total a cargo: {self.proyectos_asignados}")
+        print(f"Mecánico {self.nombre} terminó un trabajo. Total a cargo: {self.proyectos_asignados}")
 
 
 # CLASE 5: La Orden de Trabajo (Une a todas las clases anteriores)
@@ -116,25 +141,33 @@ class OrdenModificacion:
             print(f"{self.piloto.nombre} no tiene presupuesto suficiente para esta pieza.")
 
     def finalizar_trabajo(self):
-        print(f"\n--- FINALIZANDO ORDEN N° {self.id_orden} ---")
-        total_piezas = 0
-        
-        # Recorremos la lista de piezas agregadas para aplicar las mejoras al auto
-        for pieza in self.lista_componentes:
-            # Le sumamos los HP y el ángulo de la pieza al auto de la orden
-            self.vehiculo.incrementar_rendimiento(pieza.aporte_hp, pieza.aporte_angulo)
-            # Sumamos el precio de la pieza al total
-            total_piezas = total_piezas + pieza.precio
 
-        # Calculamos el costo total final (Piezas + Mano de Obra)
-        costo_total_final = total_piezas + self.costo_mano_obra
-        
-        # Cobrarle al piloto, cambiar el estado del auto y liberar al mecánico
-        self.piloto.actualizar_inversion(costo_total_final)
-        self.vehiculo.actualizar_estado("Listo para Pista")
-        self.mecanico.liberar_mecanico()
-        self.estado_orden = "Entregado"
-        print("-----------------------------------------\n")
+    if self.estado_orden == "Entregado":
+        print("La orden ya fue finalizada.")
+        return
+
+    print(f"\n--- FINALIZANDO ORDEN N° {self.id_orden} ---")
+
+    total_piezas = 0
+
+    for pieza in self.lista_componentes:
+
+        self.vehiculo.incrementar_rendimiento(
+            pieza.aporte_hp,
+            pieza.aporte_angulo
+        )
+
+        total_piezas = total_piezas + pieza.precio
+
+    costo_total_final = total_piezas + self.costo_mano_obra
+
+    self.piloto.actualizar_inversion(costo_total_final)
+    self.vehiculo.actualizar_estado("Listo para Pista")
+    self.mecanico.liberar_mecanico()
+
+    self.estado_orden = "Entregado"
+
+    print("-----------------------------------------\n")
 
 
 # SIMULACIÓN / PRUEBA DE FUNCIONAMIENTO (Para ver cómo interactúan)
@@ -162,3 +195,57 @@ orden1.finalizar_trabajo()
 
 # Ver cómo quedó el auto después del taller
 auto1.generar_ficha_tecnica()
+while True:
+
+    print("\nTaller de Tuning y Performance - Menú Principal")
+    print("1. Registrar vehiculo")
+    print("2. Mostrar vehiculos")
+    print("3. Ver tipos de personas")
+    print("4. Finalizar trabajo")
+    print("5. Salir")
+
+    opcion = input("Seleccione una opcion: ")
+
+    if opcion == "1":
+
+        id_auto = input("Ingrese ID: ")
+        modelo = input("Ingrese modelo: ")
+        año = int(input("Ingrese año: "))
+        hp = int(input("Ingrese HP: "))
+        giro = int(input("Ingrese angulo de giro: "))
+
+        nuevo_auto = VehiculoProyecto(
+            id_auto,
+            modelo,
+            año,
+            hp,
+            giro
+        )
+
+        lista_autos.append(nuevo_auto)
+
+        print("Vehiculo registrado correctamente.")
+
+    elif opcion == "2":
+
+        for auto in lista_autos:
+            auto.generar_ficha_tecnica()
+
+    elif opcion == "3":
+
+        personas = [piloto1, mecanico1]
+
+        for persona in personas:
+            persona.mostrar_tipo()
+
+    elif opcion == "4":
+
+        orden1.finalizar_trabajo()
+
+    elif opcion == "5":
+
+        print("Programa terminado.")
+        break
+
+    else:
+        print("Opcion no valida.")
